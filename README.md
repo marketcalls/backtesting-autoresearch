@@ -39,10 +39,38 @@ Inspired by [autoresearch](https://github.com/karpathy/autoresearch). The AI age
 
 1. Modifies `strategy.py` with an experimental idea
 2. Runs the backtest (~30s per experiment)
-3. Evaluates a composite score (CAGR 40% + Sharpe 30% + DrawdownProtection 30%)
+3. Evaluates a composite score (higher = better)
 4. Keeps improvements, reverts failures
 5. Logs results to `results.tsv`
 6. Repeats indefinitely
+
+### Composite Score Formula
+
+```
+score = (CAGR% x 0.4) + (Sharpe x 10 x 0.3) + ((100 - |MaxDD%|) x 0.3)
+```
+
+| Weight | Component | What it rewards |
+|--------|-----------|----------------|
+| 40% | CAGR % | Absolute returns (higher CAGR = more growth) |
+| 30% | Sharpe x 10 | Risk-adjusted returns (higher Sharpe = better return per unit of risk) |
+| 30% | 100 - \|MaxDD%\| | Capital preservation (lower drawdown = less pain) |
+
+**Example** — Baseline (CAGR=10.75, Sharpe=0.52, MaxDD=46.51):
+```
+score = (10.75 x 0.4) + (0.52 x 10 x 0.3) + ((100 - 46.51) x 0.3)
+      = 4.30 + 1.56 + 16.05
+      = 21.92
+```
+
+**Example** — Final best (CAGR=14.39, Sharpe=1.04, MaxDD=15.41):
+```
+score = (14.39 x 0.4) + (1.04 x 10 x 0.3) + ((100 - 15.41) x 0.3)
+      = 5.76 + 3.12 + 25.38
+      = 34.25
+```
+
+The formula balances growth, risk efficiency, and downside protection. A strategy that returns 20% CAGR but draws down 60% scores lower than one returning 14% with only 15% drawdown.
 
 ## Final Optimized Strategy
 
