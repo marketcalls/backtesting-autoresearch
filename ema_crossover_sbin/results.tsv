@@ -1,0 +1,27 @@
+commit	score	cagr	sharpe	max_dd	trades	status	description
+771f5a4	21.92	10.75	0.52	46.51	60	keep	baseline EMA 10/30
+5684ae9	24.81	2.21	0.24	22.65	10	keep	ADX>25 trend filter
+2ba1fe6	21.09	1.72	0.19	33.83	33	discard	EMA 8/21 + ADX>20 (worse DD and CAGR)
+c24564d	22.35	-1.48	-0.16	21.95	6	discard	ADX>25 + 200 SMA filter (too few trades)
+f4b3dd7	26.42	2.74	0.30	18.55	8	keep	ADX>25 + RSI<70 overbought guard
+c8e39a9	26.42	2.74	0.30	18.55	8	discard	added RSI<30 early exit (no effect)
+d7edc26	26.63	11.06	0.64	32.36	60	keep	ATR trailing stop (2x ATR from peak)
+113a2e7	27.41	2.96	0.33	15.91	10	keep	ATR trailing stop + ADX>25 entry filter
+b007e78	30.66	13.52	0.79	23.72	46	keep	ATR trailing stop + ADX>15 (sweet spot)
+7675c41	30.67	13.43	0.80	23.72	43	keep	ATR trailing + ADX>15 + RSI<70 (marginal)
+ca08ef9	32.70	13.67	0.90	18.20	43	keep	ATR 1.5x tighter trailing stop
+0815112	29.66	7.61	0.68	18.14	43	discard	ATR 1.0x too tight (cuts winners)
+e92965c	32.44	13.68	0.90	19.14	43	discard	EMA 12/26 slightly worse MaxDD
+10df148	33.24	12.32	0.98	15.41	26	keep	volume > 20-day MA confirmation
+bdd0484	31.71	9.45	0.85	15.41	19	discard	BB width expanding (too many filters)
+2d4edba	33.12	10.72	0.96	13.51	26	discard	MACD hist exit (best DD but lower CAGR)
+29ec40d	31.33	11.17	0.86	19.05	34	discard	ADX>10 too loose (noise)
+39812a1	27.43	10.72	0.79	30.77	41	discard	RF walk-forward ML filter (worse than rules)
+9c4e9e5	33.95	13.80	1.02	15.41	26	keep	ATR 1.75x sweet spot (Sharpe>1!)
+ec5c541	33.91	13.96	0.98	15.41	29	discard	remove RSI (Sharpe drops below 1)
+d4e0b62	27.54	14.10	0.84	35.38	45	discard	EMA 5/20 too fast (MaxDD blows up)
+5ee8483	33.46	12.83	0.98	15.41	25	discard	5-day momentum filter (marginal loss)
+f012c35	34.25	14.39	1.04	15.41	28	keep	RSI<80 (allows strong-trend entries)
+e8564e7	33.91	13.96	0.98	15.41	29	discard	no RSI at all (confirms RSI<80 is useful)
+f11c059	33.96	13.61	1.05	15.41	24	discard	ADX>18 (too strict, drops CAGR)
+73687b1	25.16	8.07	0.48	31.67	85	discard	re-entry after ATR stop (whipsaw disaster)
