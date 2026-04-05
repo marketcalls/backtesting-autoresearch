@@ -4,11 +4,25 @@
 
 ---
 
-A few weeks ago, I came across Andrej Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) — a project where an AI agent autonomously experiments with LLM pretraining while you sleep. The concept is beautifully simple: give the AI a fixed evaluation harness, a single file to modify, and let it loop forever — trying ideas, keeping what works, reverting what doesn't.
+Here's a quick experiment you can try right now.
+
+Open any charting platform. Pull up SBIN (State Bank of India) on a daily chart. Slap on a 10-period and 30-period EMA. Buy when the fast crosses above the slow, sell when it crosses below. The most basic trend-following strategy in every trading textbook.
+
+Run that for 15 years with Rs 10 lakh. You'll get roughly 10.75% CAGR. Not bad — until you see the **-46.51% max drawdown**. That's your account going from Rs 10 lakh to Rs 5.35 lakh at the worst point. Nearly half your capital, gone. Most people would have stopped trading long before recovering from that.
+
+Now here's the interesting part. I gave an AI agent this exact strategy and a single instruction: *make it better*. No hand-holding, no hints, no guardrails beyond "don't touch the evaluation harness." Just a loop — modify, test, keep or revert, repeat.
+
+26 experiments later, the same EMA crossover backbone now delivers **14.39% CAGR** with a **-15.41% max drawdown** and a **Sharpe ratio above 1.0**. Same stock. Same timeframe. Same entry signal at its core. The drawdown shrank by three times.
+
+What did the AI figure out? And what did it try that failed spectacularly?
+
+---
+
+The idea started when I came across Andrej Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) — a project where an AI agent autonomously experiments with LLM pretraining while you sleep. The concept is beautifully simple: give the AI a fixed evaluation harness, a single file to modify, and let it loop forever — trying ideas, keeping what works, reverting what doesn't.
 
 I had a thought: *What if I applied the same pattern to trading strategy optimization?*
 
-So I built it. And the results surprised me.
+So I built it.
 
 ---
 
