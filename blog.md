@@ -18,25 +18,79 @@ What did the AI figure out? And what did it try that failed spectacularly?
 
 ---
 
-The idea started when I came across Andrej Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) — a project where an AI agent autonomously experiments with LLM pretraining while you sleep. The concept is beautifully simple: give the AI a fixed evaluation harness, a single file to modify, and let it loop forever — trying ideas, keeping what works, reverting what doesn't.
-
-I had a thought: *What if I applied the same pattern to trading strategy optimization?*
-
-So I built it.
+The idea started when I came across Andrej Karpathy's [autoresearch](https://github.com/karpathy/autoresearch).
 
 ---
 
+## What is Autoresearch?
+
+[Autoresearch](https://github.com/karpathy/autoresearch) is a project by Andrej Karpathy — former Tesla AI Director and OpenAI founding member — that lets an AI agent autonomously run research experiments on LLM (Large Language Model) pretraining. You go to sleep, and while you're dreaming about candlestick patterns, the AI is running experiments, evaluating results, and iterating.
+
+The core idea is deceptively simple. The entire system is built on three principles:
+
+**1. Separation of concerns**: Split the project into what's fixed (the evaluation) and what's mutable (the experiment). In Karpathy's version, the fixed part is `prepare.py` — data loading, tokenizer training, the evaluation metric. The mutable part is `train.py` — model architecture, optimizer, hyperparameters. The AI only touches the mutable file.
+
+**2. Objective scoring**: Every experiment produces a single number. In autoresearch, that number is `val_bpb` (validation bits per byte) — lower is better. There's no subjective judgment. The AI doesn't need to "feel" whether a change is good. It just compares numbers.
+
+**3. Git as a research notebook**: Each experiment is a git commit. If the score improves, the commit stays. If it doesn't, `git reset --hard HEAD~1` wipes it clean. The branch history becomes a curated record of every improvement, and the TSV log captures every attempt — including the failures.
+
+The result: Karpathy reports running ~12 experiments per hour, ~100 overnight. The AI tries architectural changes, optimizer tweaks, hyperparameter tuning, and ablations — all without human intervention.
+
+I read that and thought: *This is exactly what strategy optimization needs.*
+
+---
+
+## From LLM Training to Trading: The Adaptation
+
+Trading strategy optimization has the same structure as LLM research:
+
+- There's a **fixed evaluation** — the backtest harness with historical data and realistic fees
+- There's a **mutable experiment** — the signal generation logic
+- There's a **single metric** to optimize — except in trading, we care about multiple things (returns, risk, drawdown), so we need a composite score
+- Each experiment is **fast** — a 15-year daily backtest takes ~30 seconds, not 5 minutes like LLM training
+
+Here's how I adapted the autoresearch pattern for trading:
+
 ## The Setup: Three Files, One Rule
 
-The architecture mirrors autoresearch perfectly:
+| File | Role | Who touches it | Why it's locked/unlocked |
+|------|------|----------------|--------------------------|
+| `backtest.py` | Fixed harness — data loading, portfolio simulation, scoring | **Nobody** | Prevents the AI from gaming the evaluation (e.g., changing fee calculations, cherry-picking date ranges, or modifying the scoring formula to inflate results) |
+| `strategy.py` | Signal generation logic — indicators, filters, entry/exit rules | **AI agent only** | This is the experiment. Everything inside is fair game: indicators, parameters, filters, ML models, exit logic |
+| `program.md` | Instructions for the AI — what to optimize, how to log results, the experiment loop | **Human only** | This is how the human "programs" the AI without writing code. Change the instructions to steer the research direction |
 
-| File | Role | Who touches it |
-|------|------|----------------|
-| `backtest.py` | Fixed harness — data loading, portfolio simulation, scoring | Nobody |
-| `strategy.py` | Signal generation logic | AI agent only |
-| `program.md` | Instructions for the AI | Human only |
+The separation matters. If the AI could modify `backtest.py`, it might learn to reduce fees to zero, shorten the test period to a favorable window, or change the score formula. That's not optimization — that's cheating. By locking the harness, every improvement has to come from genuinely better trading logic.
 
-The rule is simple: the AI agent can only modify `strategy.py`. Everything else is locked. The function signature is fixed — `generate_signals(df)` takes in OHLCV data and returns entry/exit boolean signals. That's it.
+### What the AI CAN do in strategy.py
+
+The function signature is fixed — `generate_signals(df)` takes in a DataFrame with OHLCV columns and returns `(entries, exits)` as boolean Series. Within that contract, everything is fair game:
+
+- Change indicator types and periods (EMA, SMA, DEMA, TEMA)
+- Add filters (ADX, RSI, volume, Bollinger Bands, ATR)
+- Build ML models (Random Forest, Logistic Regression, PCA) with walk-forward training
+- Implement trailing stops, mean-reversion exits, momentum confirmation
+- Combine multiple indicators in any way it can imagine
+
+### What the AI CANNOT do
+
+- Modify `backtest.py` — no changing fees, date ranges, initial capital, or scoring
+- Install new packages — only use what's already in `pyproject.toml`
+- Introduce lookahead bias — all indicators and filters must use only past/current data
+- Change the function signature — must return `(entries, exits)` boolean Series
+
+### The Instructions (program.md)
+
+The `program.md` file is essentially a prompt that tells the AI how to behave. It contains:
+
+- **The goal**: Maximize the composite score
+- **The experiment loop**: Modify, commit, run, evaluate, keep/revert, log, repeat
+- **Strategy tips**: Start simple, one change at a time, combine winners
+- **Anti-overfitting rules**: Keep trades above ~20, use walk-forward for ML, prefer simple filters
+- **The critical instruction**: *NEVER STOP*. The human might be asleep. Run until manually interrupted.
+
+This last part is key. The AI doesn't pause after each experiment to ask "should I continue?" It just keeps going, autonomously, until you come back and Ctrl+C it.
+
+### The Scoring Formula
 
 For evaluation, I designed a composite score that balances three things traders care about:
 
@@ -47,6 +101,8 @@ score = (CAGR% x 0.4) + (Sharpe x 10 x 0.3) + ((100 - |MaxDD%|) x 0.3)
 - **40% weight on CAGR** — because returns matter
 - **30% weight on Sharpe ratio** — because risk-adjusted returns matter more
 - **30% weight on drawdown protection** — because surviving to trade another day matters most
+
+Why not just maximize CAGR? Because a strategy that returns 25% but draws down 60% will blow up your account in practice. The composite score forces the AI to find strategies that are *good enough* on returns while being *excellent* on risk management. A strategy with 14% CAGR and 15% drawdown scores higher than one with 20% CAGR and 50% drawdown — and that's exactly the tradeoff a real trader would make.
 
 The data: 15 years of daily SBIN (State Bank of India) from [yfinance](https://github.com/ranaroussi/yfinance), with realistic Indian market transaction costs — STT, statutory charges, and Rs 20/order brokerage.
 
