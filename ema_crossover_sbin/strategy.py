@@ -14,6 +14,8 @@ ATR_PERIOD = 14
 ATR_MULTIPLIER = 2.0
 ADX_PERIOD = 14
 ADX_THRESHOLD = 15
+RSI_PERIOD = 14
+RSI_OVERBOUGHT = 70
 
 
 def exrem(signal1, signal2):
@@ -38,12 +40,13 @@ def generate_signals(df):
     ema_slow = pd.Series(tl.EMA(close.values, timeperiod=EMA_SLOW), index=close.index)
     atr = pd.Series(tl.ATR(high.values, low.values, close.values, timeperiod=ATR_PERIOD), index=close.index)
     adx = pd.Series(tl.ADX(high.values, low.values, close.values, timeperiod=ADX_PERIOD), index=close.index)
+    rsi = pd.Series(tl.RSI(close.values, timeperiod=RSI_PERIOD), index=close.index)
 
     buy_raw = (ema_fast > ema_slow) & (ema_fast.shift(1) <= ema_slow.shift(1))
     sell_ema = (ema_fast < ema_slow) & (ema_fast.shift(1) >= ema_slow.shift(1))
 
-    # ADX entry filter
-    buy_raw = buy_raw & (adx > ADX_THRESHOLD)
+    # ADX entry filter + RSI overbought guard
+    buy_raw = buy_raw & (adx > ADX_THRESHOLD) & (rsi < RSI_OVERBOUGHT)
 
     # ATR trailing stop exit
     in_trade = False
