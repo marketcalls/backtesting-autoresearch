@@ -1,0 +1,15 @@
+[project]
+name = "backtesting"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "duckdb>=1.5.1",
+    "openalgo>=1.0.46",
+    "plotly>=6.6.0",
+    "python-dotenv>=1.2.2",
+    "ta-lib>=0.6.8",
+    "vectorbt>=0.28.5",
+    "yfinance>=1.2.0",
+]
